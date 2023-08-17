@@ -1,1 +1,18 @@
-<h1>Hi <%= name %></h1>
+<html>
+  <head>
+    <title>Car Make Search</title>
+  </head>
+  <body>
+    <h1>Welcome <%= name %> To Our Car Search Engine</h1>
+    <h1>Car Make Search</h1>
+    <form action="/search" method="post">
+      <input type="text" name="searchQuery" placeholder="Enter car make" />
+      <select name="dataSource">
+        <option value="postgreSQL">PostgreSQL</option>
+        <option value="mongoDB">MongoDB</option>
+      </select>
+
+      <button type="submit">Search</button>
+    </form>
+  </body>
+</html>

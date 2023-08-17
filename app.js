@@ -8,6 +8,10 @@ const bcrypt = require("bcrypt");
 const passport = require("passport");
 const flash = require("express-flash");
 const session = require("express-session");
+const pool = require("./services/postdb");
+const { connectToMongoDB, getDb } = require("./services/Mongodb");
+const logQuery = require("./logs/loggers");
+connectToMongoDB();
 
 const initializePassport = require("./passport-config");
 initializePassport(
@@ -18,7 +22,7 @@ initializePassport(
 
 const users = [];
 
-app.set("view-engine", "ejs");
+app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: false }));
 app.use(flash());
 app.use(
@@ -33,6 +37,45 @@ app.use(passport.session());
 
 app.get("/", checkAuthenticated, (req, res) => {
   res.render("index.ejs", { name: req.user.name });
+});
+
+app.post("/search", async (req, res) => {
+  const searchQuery = req.body.searchQuery;
+  const dataSource = req.body.dataSource;
+
+  try {
+    let cars = [];
+
+    if (dataSource === "postgreSQL") {
+      const query =
+        "SELECT car_make, car_model, car_modelyear FROM cars WHERE car_make ILIKE $1";
+      const result = await pool.query(query, [`%${searchQuery}%`]);
+
+      if (result && Array.isArray(result.rows)) {
+        cars = result.rows;
+      } else {
+        throw new Error("Invalid result format from PostgreSQL query");
+      }
+    } else if (dataSource === "mongoDB") {
+      const db = getDb("FinalSprintCars");
+      const collection = db.collection("cars");
+      cars = await collection
+        .find({ car_make: { $regex: searchQuery, $options: "i" } })
+        .toArray();
+    }
+
+    // Log the query
+    if (req.isAuthenticated()) {
+      logQuery(req.user.id, searchQuery, dataSource);
+    } else {
+      logQuery("anonymous", searchQuery);
+    }
+
+    res.render("results", { cars });
+  } catch (error) {
+    console.error(error);
+    res.send("An error occurred.");
+  }
 });
 
 app.get("/login", checkNotAuthenticated, (req, res) => {
@@ -66,14 +109,12 @@ app.post("/register", checkNotAuthenticated, async (req, res) => {
   } catch {
     res.redirect("/register");
   }
-  console.log(users);
 });
 
 function checkAuthenticated(req, res, next) {
   if (req.isAuthenticated()) {
     return next();
   }
-
   res.redirect("/login");
 }
 

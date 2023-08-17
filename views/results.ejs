@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Search Results</title>
+    <style>
+      /* Add some spacing between each result */
+      .result {
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        padding: 10px;
+      }
+
+      /* Display results on a single line with spacing */
+      .result strong {
+        display: inline-block;
+        width: 150px; /* Adjust as needed */
+        font-weight: bold;
+      }
+
+      .result span {
+        display: inline-block;
+        margin-left: 10px; /* Adjust spacing between label and value */
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Search Results</h1>
+    <% cars.forEach(function(car) { %>
+    <div class="result">
+      <strong>Car Make:</strong><span><%= car.car_make %></span><br />
+      <strong>Car Model:</strong><span><%= car.car_model %></span><br />
+      <strong>Car Model Year:</strong><span><%= car.car_modelyear %></span>
+    </div>
+    <% }); %>
+    <a href="/" style="margin-top: 20px; display: inline-block"
+      >Back to Search</a
+    >
+  </body>
+</html>
